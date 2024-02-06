@@ -18,6 +18,9 @@ def index():
 def receivePostResult():
     data = json.loads(request.form['data'])
     print (data)
+    return {'stat':200}
 
 if __name__=='__main__':
     app.run(port=1919,host='0.0.0.0',debug=True) 
+
+   
