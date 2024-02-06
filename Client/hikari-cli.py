@@ -16,12 +16,16 @@ def judgePts(execPath,inData,outData,timeLimit,memLimit):
         
     #比对程序输出
     if (((output.decode('utf-8')).replace('\n','')).replace(' ','')).strip() == (((outData).replace('\n','')).replace(' ','')).strip(): #去除回车和空格
-        return {'stat':'AC','out':output,'ans':outData}
+        return {'stat':'AC','out':output.decode('utf-8'),'ans':outData}
     else:
-        return {'stat':'WA','out':output,'ans':outData}
+        return {'stat':'WA','out':output.decode('utf-8'),'ans':outData}
 
 def judge(data,code,language ='cpp'):
-    os.mkdir('Temp')
+    try:
+        os.mkdir('Temp')
+    except Exception as e:
+        print("[Warning] Temp Folder Create Failed:",e)
+
     resultDict = {'stat':'AC'}
     score = 0
 
@@ -57,10 +61,14 @@ def judge(data,code,language ='cpp'):
             resultDict['stat'] = resultDict[i]['stat']
 
     #删除临时文件
-    os.unlink(sourcePath)
-    os.unlink(execPath)
-    os.unlink(cplogPath)
-    os.rmdir('Temp')
+    try:
+        os.unlink(sourcePath)
+        os.unlink(execPath)
+        os.unlink(cplogPath)
+        os.rmdir('Temp')
+    except Exception as e:
+        print("[Warning] Unlink File Failed:",e)
+    
     resultDict['score'] = score
     return resultDict    
 
@@ -102,13 +110,32 @@ def judgeWithURL(dataURL,code,language='cpp'):
         return {'stat':'UKE','log':str(e)}
 
 
-#传参方式：python3 hikari-cli.py "http://124.220.133.192/1001.json" test.cpp
+#传参方式：python hikari-cli.py "http://127.0.0.1:1919" Clearwave 123456 1001 test.cpp
 if __name__ == '__main__':
+    result = ''
     try:
+        #从文件读取代码
         code = ''
-        with open(sys.argv[2],'r') as f:
+        with open(sys.argv[5],'r') as f:
             code = f.read()
 
-        print(judgeWithURL(sys.argv[1],code,'cpp'))
+        dataURL = f'{sys.argv[1]}/data/{sys.argv[4]}'
+        result = judgeWithURL(dataURL,code,'cpp')
+        print(result)
+
+        #上传结果
+        try:
+            postURL = f'{sys.argv[1]}/post_result'
+            resultDict = { 
+                'name': sys.argv[2],
+                'passwd': sys.argv[3],
+               'pid': sys.argv[4],
+                'result': json.dumps(result)
+            }
+            requests.post(url=postURL,data={'data':json.dumps(resultDict)})
+        except Exception as e:
+            print("Upload Result Failed.\n Exception:",str(e))
     except Exception as e:
-        print("Exception:",str(e))
+        print("Judge Failed.\n Exception:",str(e))
+
+    
