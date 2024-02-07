@@ -114,6 +114,30 @@ def judgeWithURL(dataURL,code,language='cpp'):
         print (e)
         return {'status':'UKE','log':str(e)}
 
+#全流程测试
+def judgeFlow(ojURL,uid,passwd,pid,code):
+    dataURL = f'{ojURL}/data/{pid}'
+    result = judgeWithURL(dataURL,code,'cpp')
+
+    #上传结果
+    try:
+        postURL = f'{ojURL}/post_result'
+        resultDict = { 
+            'uid': uid,
+            'passwd': passwd,
+            'pid': pid,
+            'code': code,
+            'result': json.dumps(result)
+        }
+        res = (requests.post(url=postURL,data={'data':json.dumps(resultDict)})).json()
+        if res['status'] == 404:
+            result["upload_failure"] = True
+            
+        print(result)
+
+    except Exception as e:
+        print("Upload Result Failed.\n Exception:",str(e))
+
 #                                      OJ网址           UID 密码明文 题号  测试文件
 #传参方式：python hikari-cli.py "http://127.0.0.1:1919"  2   123456  1000 test.cpp 
 if __name__ == '__main__':
@@ -123,28 +147,8 @@ if __name__ == '__main__':
         code = ''
         with open(sys.argv[5],'r') as f:
             code = f.read()
-
-        dataURL = f'{sys.argv[1]}/data/{sys.argv[4]}'
-        result = judgeWithURL(dataURL,code,'cpp')
-
-        #上传结果
-        try:
-            postURL = f'{sys.argv[1]}/post_result'
-            resultDict = { 
-                'uid': sys.argv[2],
-                'passwd': sys.argv[3],
-               'pid': sys.argv[4],
-               'code': code,
-                'result': json.dumps(result)
-            }
-            res = (requests.post(url=postURL,data={'data':json.dumps(resultDict)})).json()
-            if res['status'] == 404:
-                result["upload_failure"] = True
-            
-            print(result)
-
-        except Exception as e:
-            print("Upload Result Failed.\n Exception:",str(e))
+        
+        judgeFlow(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],code)
     except Exception as e:
         print("Judge Failed.\n Exception:",str(e))
 
