@@ -5,14 +5,6 @@ from base64 import b64encode,b64decode
 
 app = Flask(__name__)
 
-#做3次MD5
-def md5_3(x):
-    x1 = hashlib.md5(x.encode()).hexdigest()
-    x2 = hashlib.md5(x1.encode()).hexdigest()
-    x3 = hashlib.md5(x2.encode()).hexdigest()
-    return x3
-
-
 db_host = 'localhost'
 db_user = 'hikari'
 db_password = 'YGZBsZ52rYpcATfE'
@@ -55,7 +47,7 @@ def receivePostResult():
         if len(result) == 0:
             print('[Post result] Invalid UID:',data['uid'])
             return {'status':404,'message':'Invalid UID.'}
-        elif result[0][0] != md5_3(data['passwd']):
+        elif result[0][0] != data['passwd']:
             print('[Post result] Bad Password:',data['uid'],data['passwd'])
             return {'status':404,'message':'Bad Password.'}
             
