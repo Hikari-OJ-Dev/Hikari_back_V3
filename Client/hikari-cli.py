@@ -1,6 +1,11 @@
-import os, json, time, subprocess, requests
-import sys
+import os, json, time, subprocess, requests, hashlib, sys
 
+#做3次MD5
+def md5_3(x):
+    x1 = hashlib.md5(x.encode()).hexdigest()
+    x2 = hashlib.md5(x1.encode()).hexdigest()
+    x3 = hashlib.md5(x2.encode()).hexdigest()
+    return x3
 
 def judgePts(execPath,inData,outData,timeLimit,memLimit):
     #测试
@@ -128,7 +133,7 @@ def judgeFlow(ojURL,uid,passwd,pid,code):
         postURL = f'{ojURL}/post_result'
         resultDict = { 
             'uid': uid,
-            'passwd': passwd,
+            'passwd': md5_3(passwd),
             'pid': pid,
             'code': code,
             'result': json.dumps(result)
