@@ -1,0 +1,10 @@
+{
+    "pid":1000,
+    "time_limit":1,
+    "mem_limit":1000,
+    "data_cnt":2,
+    "data":{
+        "1":{"in":"1 1","out":"2","score":50},
+        "2":{"in":"2 3","out":"5","score":50}
+    }
+}
