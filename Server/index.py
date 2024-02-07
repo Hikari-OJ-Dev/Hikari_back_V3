@@ -1,9 +1,17 @@
 from flask import Flask,request
-import os, json, time
+import os, json, time, hashlib
 import pymysql
 from base64 import b64encode,b64decode
 
 app = Flask(__name__)
+
+#做3次MD5
+def md5_3(x):
+    x1 = hashlib.md5(x.encode()).hexdigest()
+    x2 = hashlib.md5(x1.encode()).hexdigest()
+    x3 = hashlib.md5(x2.encode()).hexdigest()
+    return x3
+
 
 db_host = 'localhost'
 db_user = 'hikari'
@@ -42,10 +50,19 @@ def receivePostResult():
         r_score = detail['score']; del detail['score']
         r_log = detail['log'].replace("'","\\'").replace('"','\\"'); del detail['log']
         
+        cursor.execute("SELECT password FROM `user` WHERE `id`=%d" % (int(data['uid'])))
+        result = cursor.fetchall()
+        if len(result) == 0:
+            print('[Post result] Invalid UID:',data['uid'])
+            return {'status':404,'message':'Invalid UID.'}
+        elif result[0][0] != md5_3(data['passwd']):
+            print('[Post result] Bad Password:',data['uid'],data['passwd'])
+            return {'status':404,'message':'Bad Password.'}
+            
         ss = f'''INSERT INTO `record` (rid,pid,uid,code,stat,pts,score,log,detail)
         VALUES({str(int(time.time()*1000))},{data['pid']},{data['uid']},'{data['code']}','{r_status}',{r_pts},{r_score},'{r_log}','{b64encode((json.dumps(detail)).encode('utf-8')).decode('utf-8')}')'''
         
-        print(ss)
+        #print(ss)
         cursor.execute(ss)
         results = cursor.fetchall()
         db.commit()
