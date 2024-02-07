@@ -108,8 +108,12 @@ Json Example:
 
 def judgeWithURL(dataURL,code,language='cpp'):
     try:
-        jsonData = requests.get(dataURL)
-        return judge(jsonData.json(),code,language)
+        jsonData = (requests.get(dataURL)).json()
+        if jsonData['data_cnt'] == 0:
+            print ({'status':'Bad PID.'})
+            exit(0)
+
+        return judge(jsonData,code,language)
     except Exception as e:
         print (e)
         return {'status':'UKE','log':str(e)}
