@@ -25,7 +25,8 @@ def judge(data,code,language ='cpp'):
     try:
         os.mkdir('Temp')
     except Exception as e:
-        print("[Warning] Temp Folder Create Failed:",e)
+        #print("[Warning] Temp Folder Create Failed:",e)
+        pass
 
     resultDict = {'status':'AC'}
     score = 0;pts = 0
@@ -69,7 +70,8 @@ def judge(data,code,language ='cpp'):
         os.unlink(cplogPath)
         os.rmdir('Temp')
     except Exception as e:
-        print("[Warning] Unlink File Failed:",e)
+        #print("[Warning] Unlink File Failed:",e)
+        pass
     
     resultDict['score'] = score
     resultDict['pts'] = pts
@@ -112,8 +114,8 @@ def judgeWithURL(dataURL,code,language='cpp'):
         print (e)
         return {'status':'UKE','log':str(e)}
 
-#                                      OJ网址          UID 密码MD5*3  题号 测试文件
-#传参方式：python hikari-cli.py "http://127.0.0.1:1919"  1   123456 1000 test.cpp
+#                                      OJ网址           UID 密码明文 题号  测试文件
+#传参方式：python hikari-cli.py "http://127.0.0.1:1919"  2   123456  1000 test.cpp 
 if __name__ == '__main__':
     result = ''
     try:
@@ -124,7 +126,6 @@ if __name__ == '__main__':
 
         dataURL = f'{sys.argv[1]}/data/{sys.argv[4]}'
         result = judgeWithURL(dataURL,code,'cpp')
-        print(result)
 
         #上传结果
         try:
@@ -136,7 +137,12 @@ if __name__ == '__main__':
                'code': code,
                 'result': json.dumps(result)
             }
-            requests.post(url=postURL,data={'data':json.dumps(resultDict)})
+            res = (requests.post(url=postURL,data={'data':json.dumps(resultDict)})).json()
+            if res['status'] == 404:
+                result["upload_failure"] = True
+            
+            print(result)
+
         except Exception as e:
             print("Upload Result Failed.\n Exception:",str(e))
     except Exception as e:
