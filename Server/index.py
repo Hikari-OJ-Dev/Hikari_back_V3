@@ -78,9 +78,10 @@ def receivePostResult():
             
         if (r_pts == data_cnt):
             r_status = "AC"
-            
+        
+        r_rid = str(int(time.time()*1000))
         ss = f'''INSERT INTO `record` (rid,pid,uid,code,stat,pts,score,log,detail)
-        VALUES({str(int(time.time()*1000))},{data['pid']},{data['uid']},'{data['code']}','{r_status}',{r_pts},{r_score},'{r_log}','{b64encode((json.dumps(detail)).encode('utf-8')).decode('utf-8')}')'''
+        VALUES({r_rid},{data['pid']},{data['uid']},'{data['code']}','{r_status}',{r_pts},{r_score},'{r_log}','{b64encode((json.dumps(detail)).encode('utf-8')).decode('utf-8')}')'''
         
         #print(ss)
         cursor.execute(ss)
@@ -106,6 +107,7 @@ def receivePostResult():
         detail['score'] = r_score
         detail['pts'] = r_pts
         detail['log'] = r_log
+        detail['rid'] = r_rid
         return json.dumps(detail);
     except Exception as e:
         print("Error: ", str(e))
