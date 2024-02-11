@@ -18,13 +18,19 @@ except Exception as e:
     print("Open Database Failed:",e)
 
 
-@app.route('/data/<id>')
-def fetch_data(id):
-    if not os.path.exists(f'Data/{id}.json'):
+@app.route('/data/<idx>')
+def fetch_data(idx):
+    if not os.path.exists(f'Data/{idx}.json'):
         return {'data_cnt':0,'Log':'Data Not Found'}
     
-    with open(f'Data/{id}.json','r') as f:
-        return json.loads(f.read())
+    data = []
+    with open(f'Data/{idx}.json','r') as f:
+        data = json.loads(f.read())
+    
+    # for i in data['data'].values():
+    #    del i['out']
+        
+    return data
 
 @app.route('/')
 def index():
@@ -36,12 +42,6 @@ def receivePostResult():
         data = json.loads(request.form['data'])
         detail = json.loads(data['result'])
         
-        r_code = data['code'].replace("'","\\'").replace('"','\\"')
-        r_status = detail['status']; del detail['status']
-        r_pts = detail['pts']; del detail['pts']
-        r_score = detail['score']; del detail['score']
-        r_log = detail['log'].replace("'","\\'").replace('"','\\"'); del detail['log']
-        
         cursor.execute("SELECT password FROM `user` WHERE `id`=%d" % (int(data['uid'])))
         result = cursor.fetchall()
         if len(result) == 0:
@@ -50,6 +50,34 @@ def receivePostResult():
         elif result[0][0] != data['passwd']:
             print('[Post result] Bad Password:',data['uid'],data['passwd'])
             return {'status':404,'message':'Bad Password.'}
+        
+        #print(data)
+        r_code = data['code'].replace("'","\\'").replace('"','\\"')
+        r_status = detail['status']; del detail['status']
+        r_score = 0;r_pts = 0
+        r_log = detail['log'].replace("'","\\'").replace('"','\\"'); del detail['log']
+        
+        #判分
+        with open(f'Data/{data['pid']}.json','r') as f:
+            data00 = json.loads(f.read())
+            data_cnt = data00['data_cnt']
+            dataxx = data00['data']
+            #print(data_cnt,dataxx)
+        for i in detail.keys():
+            detail[i]['ans'] = (dataxx[i]['out'])[:1000]
+            if detail[i]['status'] == 'OK':
+                if ((detail[i]['out'].replace('\n','')).replace(' ','')).strip() == ((dataxx[i]['out'].replace('\n','')).replace(' ','')).strip():
+                    detail[i]['status'] = 'AC'
+                    r_pts += 1
+                    r_score += dataxx[i]['score']
+                else:
+                    detail[i]['status'] = 'WA'
+                    if r_status == "OK":
+                        r_status = "WA" 
+            detail[i]['out'] = (detail[i]['out'])[:1000]
+            
+        if (r_pts == data_cnt):
+            r_status = "AC"
             
         ss = f'''INSERT INTO `record` (rid,pid,uid,code,stat,pts,score,log,detail)
         VALUES({str(int(time.time()*1000))},{data['pid']},{data['uid']},'{data['code']}','{r_status}',{r_pts},{r_score},'{r_log}','{b64encode((json.dumps(detail)).encode('utf-8')).decode('utf-8')}')'''
@@ -73,7 +101,12 @@ def receivePostResult():
                 ss += f"where `id` = {data['uid']}"
                 cursor.execute(ss)
                 db.commit()
-        return {'status':200}
+        
+        detail['status'] = r_status
+        detail['score'] = r_score
+        detail['pts'] = r_pts
+        detail['log'] = r_log
+        return json.dumps(detail);
     except Exception as e:
         print("Error: ", str(e))
         return {'status':500,'message':str(e)}
