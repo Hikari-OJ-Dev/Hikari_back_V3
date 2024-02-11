@@ -27,8 +27,8 @@ def fetch_data(idx):
     with open(f'Data/{idx}.json','r') as f:
         data = json.loads(f.read())
     
-    # for i in data['data'].values():
-    #    del i['out']
+    for i in data['data'].values():
+        del i['out']
         
     return data
 
