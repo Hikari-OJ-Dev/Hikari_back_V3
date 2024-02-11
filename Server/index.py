@@ -56,8 +56,23 @@ def receivePostResult():
         
         #print(ss)
         cursor.execute(ss)
-        results = cursor.fetchall()
         db.commit()
+        ss = f'SELECT * FROM `statistics` WHERE id in({data['uid']})';
+        cursor.execute(ss)
+        results = cursor.fetchall()
+        if len(results) == 0:
+            ss = f"INSERT INTO `statistics` VALUE({data['uid']},0,0,'[]',1000)";
+            cursor.execute(ss)
+            db.commit()
+        else:
+            xtmp = json.loads(results[0][3])
+            if not data['pid'] in xtmp:
+                ss = f"UPDATE `statistics` SET tot_submit = tot_submit+1"
+                if r_status == 'AC':
+                    ss += f",tot_ac = tot_ac + 1,rank = rank + 3,ac_detail=json_array_append(ac_detail,'$','{data['pid']}')"
+                ss += f"where `id` = {data['uid']}"
+                cursor.execute(ss)
+                db.commit()
         return {'status':200}
     except Exception as e:
         print("Error: ", str(e))
