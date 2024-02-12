@@ -11,13 +11,6 @@ db_password = 'YGZBsZ52rYpcATfE'
 db_database = 'hikari'
 db_port = 3306
 
-try:
-    db = pymysql.connect(host=db_host,user=db_user,password=db_password,database=db_database,port=db_port)
-    cursor = db.cursor()
-except Exception as e:
-    print("Open Database Failed:",e)
-
-
 @app.route('/data/<idx>')
 def fetch_data(idx):
     if not os.path.exists(f'Data/{idx}.json'):
@@ -39,6 +32,12 @@ def index():
 @app.route('/post_result',methods=['POST'])
 def receivePostResult():
     try:
+        try:
+            db = pymysql.connect(host=db_host,user=db_user,password=db_password,database=db_database,port=db_port)
+            cursor = db.cursor()
+        except Exception as e:
+            print("Open Database Failed:",e)
+        
         data = json.loads(request.form['data'])
         detail = json.loads(data['result'])
         
@@ -102,6 +101,8 @@ def receivePostResult():
                 ss += f"where `id` = {data['uid']}"
                 cursor.execute(ss)
                 db.commit()
+        
+        db.close()
         
         detail['status'] = r_status
         detail['score'] = r_score
