@@ -1,4 +1,4 @@
-import webview, requests
+import webview, requests, os
 import webview.menu as wm
 from hikari_cli import judgeFlow
 
@@ -16,8 +16,7 @@ def submit(pid, uid, language, codeFile, Passwd):
     requests.get(ojFrontURL+ '/problem/submit?delete=' + codeFile)
     window.load_url(ojFrontURL + f'/record/?id={res['rid']}')
 
-window = webview.create_window('Hikari',ojFrontURL,width=1280,height=800,min_size=(900,600))
-window.expose(submit)
+
 
 def homePage():
     window.load_url(ojFrontURL)
@@ -39,5 +38,13 @@ menu_items = [
         wm.MenuAction('关于', showAbout),
     ]
 
-webview.start(menu=menu_items)
+if not os.path.exists("./Compilers/MinGW64"):
+    winErr = webview.create_window(
+        'Error', html='<html><head></head><body><center><h1>MingGW Not Found.</center></body></html>'
+    )
+    webview.start(winErr)
+else:
+    window = webview.create_window('Hikari',ojFrontURL,width=1280,height=800,min_size=(900,600), text_select = True)
+    window.expose(submit)
+    webview.start(menu=menu_items)
 
