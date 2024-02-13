@@ -11,13 +11,13 @@ def judgePts(execPath,inData,timeLimit,memLimit):
     #测试
     obj = subprocess.Popen([execPath],shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     try:
-        obj.stdin.write(inData.encode('utf-8'))
-        output,err = obj.communicate(timeout = timeLimit)
-    except subprocess.TimeoutExpired:
-        obj.kill()
+        obj.stdin.write(inData.encode('utf-8')) #将输入数据传递给评测进程
+        output,err = obj.communicate(timeout = timeLimit) #获取进程输出
+    except subprocess.TimeoutExpired: #超时
+        obj.kill() #杀掉进程
         return {'status':'TLE','out':'(Time Limit Exceeded.)'}
     
-    if err:
+    if err: #有错误信息，则报RE
         return {'status':'RE','out':err}
         
     #输出
@@ -25,7 +25,7 @@ def judgePts(execPath,inData,timeLimit,memLimit):
     return {'status':'OK','out':output.decode('utf-8')}
 
 def judge(data,code,language ='cpp'):
-    try:
+    try: #尝试创建Temp目录
         os.mkdir('Temp')
     except Exception as e:
         #print("[Warning] Temp Folder Create Failed:",e)
@@ -48,6 +48,7 @@ def judge(data,code,language ='cpp'):
     #执行编译
     os.system(compileCommands[language])
 
+    #读取编译信息
     compileLog = ''
     with open(cplogPath,'r') as f:
         compileLog = f.read()
@@ -63,7 +64,7 @@ def judge(data,code,language ='cpp'):
         if resultDict['status'] == 'OK' and resultDict[i]['status'] != 'OK':
             resultDict['status'] = resultDict[i]['status']
 
-    #删除临时文件
+    #尝试删除临时文件
     try:
         os.unlink(sourcePath)
         os.unlink(execPath)
@@ -89,39 +90,40 @@ Json Example:
 }
 """
 
+#从URL获取数据并评测
 def judgeWithURL(dataURL,code,language='cpp'):
     try:
-        jsonData = (requests.get(dataURL)).json()
+        jsonData = (requests.get(dataURL)).json() #获取数据并转化为dict
         #print(jsonData)
-        if jsonData['data_cnt'] == 0:
+        if jsonData['data_cnt'] == 0: #若data_cnt为0，则报PID错误
             print ({'status':'Bad PID.'})
             exit(0)
 
-        return judge(jsonData,code,language)
+        return judge(jsonData,code,language) #执行评测
     except Exception as e:
         print (e)
         return {'status':'UKE','log':str(e)}
 
 #全流程测试
 def judgeFlow(ojURL,uid,passwd,pid,code,language = 'cpp'):
-    dataURL = f'{ojURL}/data/{pid}'
-    result = judgeWithURL(dataURL,code,language)
+    dataURL = f'{ojURL}/data/{pid}' #获取数据的URL
+    result = judgeWithURL(dataURL,code,language) #评测
     #print(result)
     #上传结果
     try:
-        postURL = f'{ojURL}/post_result'
+        postURL = f'{ojURL}/post_result' #POST数据的URL
         resultDict = { 
-            'uid': uid,
-            'passwd': md5_3(passwd),
-            'pid': pid,
-            'code': code,
-            'result': json.dumps(result)
+            'uid': uid, #用户ID
+            'passwd': md5_3(passwd), #加密后的用户密码
+            'pid': pid, #题目ID
+            'code': code, #代码
+            'result': json.dumps(result) #评测结果
         }
-        res = (requests.post(url=postURL,data={'data':json.dumps(resultDict)})).json()
+        res = (requests.post(url=postURL,data={'data':json.dumps(resultDict)})).json() #执行POST
         if res['status'] == 404:
             res["upload_failure"] = True
             
-        print(res)
+        print(res) #输出结果
         return res
 
     except Exception as e:
@@ -137,6 +139,7 @@ if __name__ == '__main__':
         with open(sys.argv[5],'r') as f:
             code = f.read()
         
+        #执行评测
         judgeFlow(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],code)
     except Exception as e:
         print("Judge Failed.\n Exception:",str(e))
