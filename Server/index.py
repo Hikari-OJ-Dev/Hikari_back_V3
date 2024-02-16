@@ -11,6 +11,13 @@ db_password = 'YGZBsZ52rYpcATfE'
 db_database = 'hikari'
 db_port = 3306
 
+#做3次MD5
+def md5_3(x):
+    x1 = hashlib.md5(x.encode()).hexdigest()
+    x2 = hashlib.md5(x1.encode()).hexdigest()
+    x3 = hashlib.md5(x2.encode()).hexdigest()
+    return x3
+
 @app.route('/data/<idx>')
 def fetch_data(idx):
     if not os.path.exists(f'Data/{idx}.json'):
@@ -46,7 +53,7 @@ def receivePostResult():
         if len(result) == 0:
             print('[Post result] Invalid UID:',data['uid'])
             return {'status':404,'message':'Invalid UID.'}
-        elif result[0][0] != data['passwd']:
+        elif result[0][0] != data['passwd'] and md5_3(result[0][0]) != data['passwd']:
             print('[Post result] Bad Password:',data['uid'],data['passwd'])
             return {'status':404,'message':'Bad Password.'}
         
