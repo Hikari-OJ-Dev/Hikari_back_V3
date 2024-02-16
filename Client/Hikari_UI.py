@@ -8,10 +8,6 @@ if os.path.exists("config.ini"):
     config.read('config.ini')
     ojURL = config['Network']['URL']
 
-    if config.has_section('Account'):
-        ojUsername = config['Account']['Username']
-        ojPassword = config['Account']['Password']
-
 else:
     ojURL = 'http://124.220.133.192'
 
@@ -59,5 +55,4 @@ if not os.path.exists("./Compilers/MinGW64"): #没有编译器，则报错
 else: #正常启动
     window = webview.create_window('Hikari',ojFrontURL,width=1280,height=800,min_size=(900,600), text_select = True)
     window.expose(submit)
-    webview.start(menu=menu_items)
-
+    webview.start(menu=menu_items, private_mode=False)
