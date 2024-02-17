@@ -15,12 +15,12 @@ ojFrontURL = ojURL + ':1243' #前端网址
 ojBackURL = ojURL + ':1919' #后端网址
 
 
-def submit(pid, uid, language, codeFile, Passwd):
+def submit(pid, uid, language, codeFile, clientID):
     window.load_html('<center><h1>正在评测，请稍等</h1></center>')
-    print (pid, uid, language, codeFile, Passwd)
+    print (pid, uid, language, codeFile, clientID)
     #print(ojFrontURL+ '/problem/Temp/' + codeFile) #代码文件路径
     code_c = (requests.get(ojFrontURL+ '/problem/Temp/' + codeFile)).text #获取代码
-    res = judgeFlow(ojBackURL,uid,Passwd,pid,code_c,language)
+    res = judgeFlow(ojBackURL,uid,clientID,pid,code_c,language)
     #print(res)
     requests.get(ojFrontURL+ '/problem/submit?delete=' + codeFile) #删除云端临时文件
     window.load_url(ojFrontURL + f'/record/?id={res['rid']}') #跳转至结果页

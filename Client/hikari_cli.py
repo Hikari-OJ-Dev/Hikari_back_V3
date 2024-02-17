@@ -1,12 +1,5 @@
 import os, json, time, subprocess, requests, hashlib, sys
 
-#做3次MD5
-def md5_3(x):
-    x1 = hashlib.md5(x.encode()).hexdigest()
-    x2 = hashlib.md5(x1.encode()).hexdigest()
-    x3 = hashlib.md5(x2.encode()).hexdigest()
-    return x3
-
 def judgePts(execPath,inData,timeLimit,memLimit):
     #测试
     obj = subprocess.Popen([execPath],shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -105,7 +98,7 @@ def judgeWithURL(dataURL,code,language='cpp'):
         return {'status':'UKE','log':str(e)}
 
 #全流程测试
-def judgeFlow(ojURL,uid,passwd,pid,code,language = 'cpp'):
+def judgeFlow(ojURL,uid,clientID,pid,code,language = 'cpp'):
     dataURL = f'{ojURL}/data/{pid}' #获取数据的URL
     result = judgeWithURL(dataURL,code,language) #评测
     #print(result)
@@ -114,7 +107,7 @@ def judgeFlow(ojURL,uid,passwd,pid,code,language = 'cpp'):
         postURL = f'{ojURL}/post_result' #POST数据的URL
         resultDict = { 
             'uid': uid, #用户ID
-            'passwd': md5_3(passwd), #加密后的用户密码
+            'clientID': clientID, #加密后的用户密码
             'pid': pid, #题目ID
             'code': code, #代码
             'result': json.dumps(result) #评测结果
@@ -129,8 +122,8 @@ def judgeFlow(ojURL,uid,passwd,pid,code,language = 'cpp'):
     except Exception as e:
         print("Upload Result Failed.\n Exception:",str(e))
 
-#                                      OJ网址           UID 密码明文 题号  测试文件
-#传参方式：python hikari-cli.py "http://127.0.0.1:1919"  2   123456  1000 test.cpp 
+#                                      OJ网址           UID              clientID              题号  测试文件
+#传参方式：python hikari-cli.py "http://127.0.0.1:1919"  2   cfe0e10e135fc086c704adbe91d8dfa1  1000 test.cpp 
 if __name__ == '__main__':
     result = ''
     try:
