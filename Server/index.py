@@ -1,7 +1,7 @@
 from flask import Flask,request
-import os, json, time, hashlib
+import os, json, time
 import pymysql
-from base64 import b64encode,b64decode
+from base64 import b64encode
 
 app = Flask(__name__)
 
@@ -11,12 +11,9 @@ db_password = 'YGZBsZ52rYpcATfE'
 db_database = 'hikari'
 db_port = 3306
 
-#做3次MD5
-def md5_3(x):
-    x1 = hashlib.md5(x.encode()).hexdigest()
-    x2 = hashlib.md5(x1.encode()).hexdigest()
-    x3 = hashlib.md5(x2.encode()).hexdigest()
-    return x3
+if '/' in __file__: slash = '/'
+else: slash = '\\'
+os.chdir(slash.join((__file__.split(slash))[:-1]))
 
 @app.route('/data/<idx>')
 def fetch_data(idx):
@@ -48,17 +45,13 @@ def receivePostResult():
         data = json.loads(request.form['data'])
         detail = json.loads(data['result'])
         
-        cursor.execute("SELECT password FROM `user` WHERE `id`=%d" % (int(data['uid'])))
+        cursor.execute("SELECT *  FROM `clientid` WHERE `token` = \"%s\"" % (data['clientID']))
         result = cursor.fetchall()
         if len(result) == 0:
-            print('[Post result] Invalid UID:',data['uid'])
-            return {'status':404,'message':'Invalid UID.'}
-        elif result[0][0] != data['passwd'] and md5_3(result[0][0]) != data['passwd']:
-            print('[Post result] Bad Password:',data['uid'],data['passwd'])
-            return {'status':404,'message':'Bad Password.'}
+            print('[Post result] Invalid clientID:',data['clientID'])
+            return {'status':404,'message':'Invalid clientID.'}
         
         #print(data)
-        r_code = data['code'].replace("'","\\'").replace('"','\\"')
         r_status = detail['status']; del detail['status']
         r_score = 0;r_pts = 0
         r_log = detail['log'].replace("'","\\'").replace('"','\\"'); del detail['log']
